@@ -1,0 +1,4 @@
+*.exe
+bin
+obj
+c_cpp_properties.json
