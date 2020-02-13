@@ -1,4 +1,4 @@
-namespace lab1.network
+﻿namespace lab1.network
 {
     public struct Neuron
     {

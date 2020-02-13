@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace lab1.network
 {
@@ -10,6 +10,8 @@ namespace lab1.network
 
         private double Alpha = 1.0d;
         private double LearningRate = 0.5d;
+        private double ReluAbove = 1.0d;
+        private double ReluBelow = 0.001d;
 
         public Perceptron(int inputLayer, int firstHiddenLayer, int outputLayer)
         {
@@ -49,7 +51,7 @@ namespace lab1.network
             int i, j;
             for (i = 0; i < input.Length; i++)
                 InputLayer[i].Output = input[i];
-            
+
 
             for (i = 0; i < FirstHidden.Length; i++)
             {
@@ -120,8 +122,8 @@ namespace lab1.network
             {
                 for (j = 0; j < InputLayer.Length; j++)
                 {
-                    FirstHidden[i].Weights[j] += FirstHidden[i].Delta * 
-                        SigmoidDifferential(FirstHidden[i].Sum) * 
+                    FirstHidden[i].Weights[j] += FirstHidden[i].Delta *
+                        SigmoidDifferential(FirstHidden[i].Sum) *
                         InputLayer[j].Output * LearningRate;
                 }
             }
@@ -131,13 +133,37 @@ namespace lab1.network
             {
                 for (j = 0; j < FirstHidden.Length; j++)
                 {
-                    OutputLayer[i].Weights[j] += OutputLayer[i].Delta * 
-                        SigmoidDifferential(OutputLayer[i].Sum) * 
+                    OutputLayer[i].Weights[j] += OutputLayer[i].Delta *
+                        SigmoidDifferential(OutputLayer[i].Sum) *
                         FirstHidden[j].Output * LearningRate;
                 }
             }
 
             return answer;
+        }
+
+
+        public void ResetWeights()
+        {
+            Random rnd = new Random(DateTime.Now.Millisecond);
+            int i, j;
+            for (i = 0; i < FirstHidden.Length; i++)
+            {
+                for (j = 0; j < InputLayer.Length; j++)
+                {
+                    FirstHidden[i].Weights[j] = rnd.NextDouble() * Math.Pow(-1, (rnd.Next(2) + 1));
+                }
+            }
+
+
+
+            for (i = 0; i < OutputLayer.Length; i++)
+            {
+                for (j = 0; j < FirstHidden.Length; j++)
+                {
+                    OutputLayer[i].Weights[j] = rnd.NextDouble() * Math.Pow(-1, (rnd.Next(2) + 1));
+                }
+            }
         }
 
 
@@ -151,14 +177,48 @@ namespace lab1.network
             return Sigmoid(X) * (1.0 - Sigmoid(X));
         }
 
-        private void SetAlpha(double Alpha)
+
+
+        protected double Relu(double X)
+        {
+            return Math.Max(X * ReluAbove, X * ReluBelow);
+        }
+
+        protected double ReluDifferential(double X)
+        {
+            if (X > 0)
+            {
+                return ReluAbove;
+            }
+            else
+            {
+                if (X < 0)
+                {
+                    return ReluBelow;
+                }
+                else
+                {
+                    return 0;
+                }
+            }
+        }
+
+
+        public void SetAlpha(double Alpha)
         {
             this.Alpha = Alpha;
         }
 
-        private void SetLearningRate(double lr)
+        public void SetLearningRate(double lr)
         {
             LearningRate = lr;
+        }
+
+
+        public void SetReluParams(double above, double below)
+        {
+            ReluAbove = above;
+            ReluBelow = below;
         }
 
     }
