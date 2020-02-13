@@ -34,16 +34,17 @@ namespace UI
             IsAntialias = true
         };
 
-        Perceptron p = new Perceptron(3, 17, 2);
+        Perceptron p = new Perceptron(3, 17, 3);
         Random rnd;
         LinkedList<SKPoint> red_points = new LinkedList<SKPoint>();
         LinkedList<SKPoint> blue_points = new LinkedList<SKPoint>();
 
-        double[][] red_set;
-        double k { get; set; } = 0.5d;
+        double[][] red_set_top;
+        double[][] red_set_bot;
         double[][] blue_set;
-        double[] ideal_red = new double[] { 1.0d, 0 };
-        double[] ideal_blue = new double[] { 0, 1.0d };
+        double[] ideal_red_top = new double[] { 1.0d, 0, 1.0d };
+        double[] ideal_red_bot = new double[] { 0, 0, 1.0d };
+        double[] ideal_blue = new double[] { 0, 1.0d, 0 };
         int choice, elem;
         bool enabled = false;
 
@@ -70,7 +71,7 @@ namespace UI
             canvas.DrawLine(0, 0, 0, height, black);
             canvas.DrawLine(0, height - 1.5f, width, height - 1.5f, black);
             canvas.DrawText("X2", 28.0f, 35.0f, black);
-            canvas.DrawText("X1", width - 45.0f,  height - 35.0f, black);
+            canvas.DrawText("X1", width - 45.0f, height - 35.0f, black);
 
 
             // Draw dots
@@ -100,17 +101,28 @@ namespace UI
 
             for (int i = 0; i < iter; i++)
             {
-                choice = rnd.Next(2);
+                choice = rnd.Next(3);
 
-                if (choice > 0)
+                switch (choice)
                 {
-                    elem = rnd.Next(blue_set.Length);
-                    p.Backpropagation(ref blue_set[elem], ref ideal_blue);
-                }
-                else
-                {
-                    elem = rnd.Next(red_set.Length);
-                    p.Backpropagation(ref red_set[elem], ref ideal_red);
+                    case 0:
+                        {
+                            elem = rnd.Next(red_set_top.Length);
+                            p.Backpropagation(ref red_set_top[elem], ref ideal_red_top);
+                            break;
+                        }
+                    case 1:
+                        {
+                            elem = rnd.Next(blue_set.Length);
+                            p.Backpropagation(ref blue_set[elem], ref ideal_blue);
+                            break;
+                        }
+                    case 2:
+                        {
+                            elem = rnd.Next(red_set_bot.Length);
+                            p.Backpropagation(ref red_set_bot[elem], ref ideal_red_bot);
+                            break;
+                        }
                 }
             }
             (sender as Button).IsEnabled = true;
@@ -130,16 +142,16 @@ namespace UI
             }
 
             Point pt = e.GetPosition(sender as SkiaSharp.Views.WPF.SKElement);
-            double[] tmpData = new double[] { 1.0d, pt.X / (surface.ActualWidth ), 1.0f - pt.Y / (surface.ActualHeight) };
+            double[] tmpData = new double[] { 1.0d, pt.X / (surface.ActualWidth), 1.0f - pt.Y / (surface.ActualHeight) };
             double[] answer = p.CountResult(ref tmpData);
 
-            if (answer[0] >= answer[1])
+            if (answer[1] > answer[0] && answer[1] > answer[2])
             {
-                red_points.AddLast(new SKPoint((float)pt.X, (float)pt.Y));
+                blue_points.AddLast(new SKPoint((float)pt.X, (float)pt.Y));
             }
             else
             {
-                blue_points.AddLast(new SKPoint((float)pt.X, (float)pt.Y));
+                red_points.AddLast(new SKPoint((float)pt.X, (float)pt.Y));
             }
 
             surface.InvalidateVisual();
@@ -165,20 +177,40 @@ namespace UI
 
         private void Init()
         {
-            string[] lines = File.ReadAllLines("./red_set.txt");
-            red_set = new double[lines.Length][];
+            string[] lines = File.ReadAllLines("./red_set_top.txt");
+            red_set_top = new double[lines.Length][];
             string[] nums;
 
             for (int i = 0; i < lines.Length; i++)
             {
                 nums = lines[i].Split(' ');
-                red_set[i] = new double[]
+                red_set_top[i] = new double[]
                 {
                     1.0d,
                     double.Parse(nums[0], CultureInfo.InvariantCulture),
                     double.Parse(nums[1], CultureInfo.InvariantCulture)
                 };
             }
+
+
+
+
+            lines = File.ReadAllLines("./red_set_bot.txt");
+            red_set_bot = new double[lines.Length][];
+
+            for (int i = 0; i < lines.Length; i++)
+            {
+                nums = lines[i].Split(' ');
+                red_set_bot[i] = new double[]
+                {
+                    1.0d,
+                    double.Parse(nums[0], CultureInfo.InvariantCulture),
+                    double.Parse(nums[1], CultureInfo.InvariantCulture)
+                };
+            }
+
+
+
 
 
             lines = File.ReadAllLines("./blue_set.txt");
@@ -199,12 +231,17 @@ namespace UI
 
             double w = surface.ActualWidth;
             double h = surface.ActualHeight;
-            foreach(double[] tmp in red_set)
+            foreach (double[] tmp in red_set_bot)
             {
                 red_points.AddLast(new SKPoint((float)(tmp[1] * w), (float)(h - tmp[2] * h)));
             }
 
-            foreach(double[] tmp in blue_set)
+            foreach (double[] tmp in red_set_top)
+            {
+                red_points.AddLast(new SKPoint((float)(tmp[1] * w), (float)(h - tmp[2] * h)));
+            }
+
+            foreach (double[] tmp in blue_set)
             {
                 blue_points.AddLast(new SKPoint((float)(tmp[1] * w), (float)(h - tmp[2] * h)));
             }
