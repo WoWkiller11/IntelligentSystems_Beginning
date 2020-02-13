@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.IO;
+using System.Globalization;
 
 namespace lab1.network
 {
@@ -7,48 +8,67 @@ namespace lab1.network
     {
         static void Main(string[] args)
         {
-            // Example logic function (A ^ B) -> C
-            /********************************************/
-            Perceptron p = new Perceptron(3, 6, 1);
+            Perceptron p = new Perceptron(3, 15, 2);
             Random rnd = new Random(DateTime.Now.Millisecond);
+            double[][] red_set;
+            double[][] blue_set;
 
-            double[][] right = new double[8][];
-            right[0] = new double[] { 1 };
-            right[1] = new double[] { 1 };
-            right[2] = new double[] { 0 };
-            right[3] = new double[] { 1 };
-            right[4] = new double[] { 0 };
-            right[5] = new double[] { 1 };
-            right[6] = new double[] { 1 };
-            right[7] = new double[] { 1 };
+            string[] lines = File.ReadAllLines("./red_set.txt");
+            red_set = new double[lines.Length][];
+            string[] nums;
 
-
-            double[][] input = new double[8][];
-            input[0] = new double[] { 0, 0, 0 };
-            input[1] = new double[] { 0, 0, 1 };
-            input[2] = new double[] { 0, 1, 0 };
-            input[3] = new double[] { 0, 1, 1 };
-            input[4] = new double[] { 1, 0, 0 };
-            input[5] = new double[] { 1, 0, 1 };
-            input[6] = new double[] { 1, 1, 0 };
-            input[7] = new double[] { 1, 1, 1 };
-
-
-            double[] result;
-            int index;
-
-            for (int i = 0; i < 10000; i++)
+            for(int i = 0; i < lines.Length; i++)
             {
-                index = rnd.Next(8);
-                result = p.Backpropagation(ref input[index], ref right[index]);
+                nums = lines[i].Split(", ");
+                red_set[i] = new double[] 
+                { 
+                    1.0d,
+                    double.Parse(nums[0], CultureInfo.InvariantCulture),
+                    double.Parse(nums[1], CultureInfo.InvariantCulture)
+                };
             }
 
 
-            for (int i = 0; i < input.Length; i++)
+            lines = File.ReadAllLines("./blue_set.txt");
+            blue_set = new double[lines.Length][];
+
+            for (int i = 0; i < blue_set.Length; i++)
             {
-                Console.WriteLine(p.CountResult(ref input[i])[0]);
+                nums = lines[i].Split(", ");
+                blue_set[i] = new double[]
+                {
+                    1.0d,
+                    double.Parse(nums[0], CultureInfo.InvariantCulture),
+                    double.Parse(nums[1], CultureInfo.InvariantCulture)
+                };
             }
-            /********************************************/
+
+            double[] ideal_red = new double[] { 1.0d, 0 };
+            double[] ideal_blue = new double[] { 0, 1.0d };
+            int choice, elem;
+
+
+            for (int i = 0; i < 100000; i++)
+            {
+                choice = rnd.Next(3);
+
+                if (choice > 1)
+                {
+                    elem = rnd.Next(blue_set.Length);
+                    p.Backpropagation(ref blue_set[elem], ref ideal_blue);
+                }
+                else
+                {
+                    elem = rnd.Next(red_set.Length);
+                    p.Backpropagation(ref red_set[elem], ref ideal_red);
+                }
+            }
+
+
+            double[] ans = p.CountResult(ref red_set[33]);
+            Console.WriteLine(ans[0] + "    " + ans[1]);
+            ans = p.CountResult(ref red_set[28]);
+            Console.WriteLine(ans[0] + "    " + ans[1]);
         }
     }
 }
