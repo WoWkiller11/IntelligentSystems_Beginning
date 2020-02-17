@@ -34,15 +34,16 @@ namespace UI
             IsAntialias = true
         };
 
-        Perceptron p = new Perceptron(3, 17, 3);
+        Perceptron p = new Perceptron(3, 4, 3);
         Random rnd;
         LinkedList<SKPoint> red_points = new LinkedList<SKPoint>();
         LinkedList<SKPoint> blue_points = new LinkedList<SKPoint>();
+        Dictionary<int, double> ErrorStatistics = new Dictionary<int, double>();
 
         double[][] red_set_top;
         double[][] red_set_bot;
         double[][] blue_set;
-        double[] ideal_red_top = new double[] { 1.0d, 0, 1.0d };
+        double[] ideal_red_top = new double[] { 1.0d, 0, 0 };
         double[] ideal_red_bot = new double[] { 0, 0, 1.0d };
         double[] ideal_blue = new double[] { 0, 1.0d, 0 };
         int choice, elem;
@@ -52,7 +53,46 @@ namespace UI
         {
             InitializeComponent();
             WindowState = WindowState.Maximized;
-            rnd = new Random(DateTime.Now.Millisecond);
+            rnd = new Random(0);
+        }
+
+
+        private void CheckForErrors()
+        {
+            double red_set_top_error = 0;
+            for (int i = 0; i < red_set_top.Length; i++)
+            {
+                double[] tmp = p.CountResult(ref red_set_top[i]);
+                if (!(tmp[1] < tmp[0]))
+                {
+                    red_set_top_error += 1;
+                }
+            }
+
+            double red_set_bot_error = 0;
+            for (int i = 0; i < red_set_bot.Length; i++)
+            {
+                double[] tmp = p.CountResult(ref red_set_bot[i]);
+                if (!(tmp[1] < tmp[2]))
+                {
+                    red_set_bot_error += 1;
+                }
+            }
+
+
+            double blue_set_error = 0;
+            for (int i = 0; i < blue_set.Length; i++)
+            {
+                double[] tmp = p.CountResult(ref blue_set[i]);
+                if (!(tmp[1] > tmp[0] && tmp[1] > tmp[2]))
+                {
+                    blue_set_error += 1;
+                }
+            }
+
+            ErrorStatistics.Add(ErrorStatistics.Count, 
+                (red_set_bot_error + red_set_top_error + blue_set_error) / 
+                (red_set_top.Length + red_set_bot.Length + blue_set.Length));
         }
 
         private void surface_PaintSurface(object sender, SkiaSharp.Views.Desktop.SKPaintSurfaceEventArgs e)
@@ -77,12 +117,12 @@ namespace UI
             // Draw dots
             foreach (SKPoint pt in red_points)
             {
-                canvas.DrawCircle(pt, 4, red);
+                canvas.DrawCircle(pt, 5, red);
             }
 
             foreach (SKPoint pt in blue_points)
             {
-                canvas.DrawCircle(pt, 4, blue);
+                canvas.DrawCircle(pt, 5, blue);
             }
         }
 
@@ -91,7 +131,6 @@ namespace UI
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            (sender as Button).IsEnabled = false;
             enabled = false;
             int iter;
             if (!int.TryParse(iter_input.Text, out iter))
@@ -102,6 +141,10 @@ namespace UI
             for (int i = 0; i < iter; i++)
             {
                 choice = rnd.Next(3);
+                if (i % 50000 == 0)
+                {
+                    CheckForErrors();
+                }
 
                 switch (choice)
                 {
@@ -125,9 +168,16 @@ namespace UI
                         }
                 }
             }
-            (sender as Button).IsEnabled = true;
             enabled = true;
             surface.InvalidateVisual();
+            p.PrintWeights(true);
+
+            StreamWriter wr = new StreamWriter(@"./ErrorStatistics.txt", false);
+            foreach(KeyValuePair<int, double> er in ErrorStatistics)
+            {
+                wr.WriteLine((1 + er.Key) * 50000 + " - " + er.Value);
+            }
+            wr.Close();
         }
 
 
@@ -166,6 +216,7 @@ namespace UI
         {
             enabled = false;
             p.ResetWeights();
+            File.Delete(@"./weights.txt");
             enabled = true;
         }
 
@@ -245,6 +296,8 @@ namespace UI
             {
                 blue_points.AddLast(new SKPoint((float)(tmp[1] * w), (float)(h - tmp[2] * h)));
             }
+
+            p.PrintWeights(false);
         }
     }
 }

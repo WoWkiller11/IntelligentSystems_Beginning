@@ -23,7 +23,7 @@
                 </StackPanel>
             </StackPanel>
             <Border DockPanel.Dock="Left" BorderBrush="Green" BorderThickness="1">
-                <skia:SKElement x:Name="surface" PaintSurface="surface_PaintSurface" Width="800" Height="800" Mouse.MouseDown="surface_MouseDown"/>
+                <skia:SKElement x:Name="surface" PaintSurface="surface_PaintSurface" Width="950" Height="950" Mouse.MouseDown="surface_MouseDown"/>
             </Border>
         </DockPanel>
     </Grid>

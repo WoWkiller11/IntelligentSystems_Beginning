@@ -22,7 +22,7 @@ namespace lab1.network
             int i, j;
 
 
-            Random rnd = new Random(DateTime.Now.Millisecond);
+            Random rnd = new Random(0);
 
             for (i = 0; i < FirstHidden.Length; i++)
             {
@@ -43,6 +43,40 @@ namespace lab1.network
                     OutputLayer[i].Weights[j] = rnd.NextDouble() * Math.Pow(-1, (rnd.Next(2) + 1));
                 }
             }
+        }
+
+
+        public void PrintWeights(bool when)
+        {
+            System.IO.StreamWriter wr = new System.IO.StreamWriter(@"./weights.txt", true);
+
+            if (!when)
+            {
+                wr.WriteLine("Before");
+            }
+            else
+            {
+                wr.WriteLine("After");
+            }
+
+            wr.WriteLine("First Hidden Layer");
+            for (int i = 0; i < FirstHidden.Length; i++)
+            {
+                for (int j = 0; j < FirstHidden[i].Weights.Length; j++)
+                {
+                    wr.WriteLine(FirstHidden[i].Weights[j]);
+                }
+            }
+
+            wr.WriteLine("Output Layer");
+            for (int i = 0; i < OutputLayer.Length; i++)
+            {
+                for (int j = 0; j < OutputLayer[i].Weights[j]; j++)
+                {
+                    wr.WriteLine(OutputLayer[i].Weights[j]);
+                }
+            }
+            wr.Close();
         }
 
 
